@@ -57,9 +57,18 @@ package object ensimefile {
     case other => other
   }
 
-  private def stringToPath(file: String, isUrl: Boolean): Path = {
-    val decodedFile = if (isUrl) URLDecoder.decode(file, "UTF-8") else file
-    Paths.get(cleanBadWindows(decodedFile))
+  private def getUriPath(uri: String): String = {
+    try {
+      new URI(cleanBadWindows(uri)).getPath
+    } catch {
+      case e: URISyntaxException => cleanBadWindows(uri)
+    }
+  }
+
+  private def stringToPath(file: String, isUri: Boolean): Path = {
+    val decodedFile = if (isUri) getUriPath(file) else cleanBadWindows(file)
+    val result = Paths.get(decodedFile)
+    result
   }
 
   implicit class RichRawFile(val raw: RawFile) extends RichEnsimeFile {
