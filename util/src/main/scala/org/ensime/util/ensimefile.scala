@@ -41,11 +41,11 @@ package object ensimefile {
     implicit val DefaultCharset: Charset = Charset.defaultCharset()
   }
 
-  private val ArchiveRegex = "((?:jar:)?file:)?([^!]++)!(.++)".r
-  private val FileRegex = "((?:jar:)?file:)?(.++)".r
+  private val ArchiveRegex = "(?:jar:)?(file:)?([^!]++)!(.++)".r
+  private val FileRegex = "(?:jar:)?(file:)?(.++)".r
   def EnsimeFile(path: String): EnsimeFile = path match {
-    case ArchiveRegex(urlPart, file, entry) => ArchiveFile(stringToPath(file, Option(urlPart).isDefined), entry)
-    case FileRegex(urlPart, file) => RawFile(stringToPath(file, Option(urlPart).isDefined))
+    case ArchiveRegex(uriPart, file, entry) => ArchiveFile(stringToPath(file, Option(uriPart)), entry)
+    case FileRegex(uriPart, file) => RawFile(stringToPath(file, Option(uriPart)))
   }
   def EnsimeFile(path: File): EnsimeFile = RawFile(path.toPath)
   def EnsimeFile(url: URL): EnsimeFile = EnsimeFile(URLDecoder.decode(url.toExternalForm(), "UTF-8"))
@@ -57,18 +57,22 @@ package object ensimefile {
     case other => other
   }
 
-  private def getUriPath(uri: String): String = {
+  // Try to decode the given uri to avoid character conversions.
+  // Consider decoding errors as a file path with an incorrect 'file:' prefix.
+  private def getUriPath(prefix: String, uri: String): String = {
     try {
-      new URI(uri).getPath
+      new URI(s"$prefix$uri").getPath
     } catch {
-      case e: URISyntaxException => cleanBadWindows(uri)
+      case e: URISyntaxException => uri
     }
   }
 
-  private def stringToPath(file: String, isUri: Boolean): Path = {
-    val decodedFile = if (isUri) getUriPath(file) else cleanBadWindows(file)
-    val result = Paths.get(decodedFile)
-    result
+  private def stringToPath(file: String, uriPart: Option[String]): Path = {
+    val decodedFile = uriPart match {
+      case Some(prefix) => getUriPath(prefix, file)
+      case None => file
+    }
+    Paths.get(cleanBadWindows(decodedFile))
   }
 
   implicit class RichRawFile(val raw: RawFile) extends RichEnsimeFile {
