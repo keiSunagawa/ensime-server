@@ -59,7 +59,7 @@ package object ensimefile {
 
   private def getUriPath(uri: String): String = {
     try {
-      new URI(cleanBadWindows(uri)).getPath
+      new URI(uri).getPath
     } catch {
       case e: URISyntaxException => cleanBadWindows(uri)
     }
