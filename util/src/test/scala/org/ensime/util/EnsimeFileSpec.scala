@@ -54,6 +54,12 @@ class EnsimeFileSpec extends FlatSpec with Matchers {
     EnsimeFile(url) shouldBe RawFile(Paths.get(file))
   }
 
+  it should "support urls containing '%' character" in {
+    val fileName = "/my/coursier/path/user%40repository/mylib.jar"
+    val fileUri = new File(fileName).toURI
+    EnsimeFile(fileUri.toString).uri shouldBe fileUri
+  }
+
   "RichRawFile" should "support isJava / isScala" in {
     RawFile(Paths.get("/foo/bar/baz.scala")).isScala shouldBe true
     RawFile(Paths.get("/foo/bar/baz.java")).isJava shouldBe true

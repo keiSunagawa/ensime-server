@@ -41,11 +41,11 @@ package object ensimefile {
     implicit val DefaultCharset: Charset = Charset.defaultCharset()
   }
 
-  private val ArchiveRegex = "(?:(?:jar:)?file:)?([^!]++)!(.++)".r
-  private val FileRegex = "(?:(?:jar:)?file:)?(.++)".r
+  private val ArchiveRegex = "(?:jar:)?(file:)?([^!]++)!(.++)".r
+  private val FileRegex = "(?:jar:)?(file:)?(.++)".r
   def EnsimeFile(path: String): EnsimeFile = path match {
-    case ArchiveRegex(file, entry) => ArchiveFile(Paths.get(cleanBadWindows(file)), entry)
-    case FileRegex(file) => RawFile(Paths.get(cleanBadWindows(file)))
+    case ArchiveRegex(uriPart, file, entry) => ArchiveFile(stringToPath(file, Option(uriPart)), entry)
+    case FileRegex(uriPart, file) => RawFile(stringToPath(file, Option(uriPart)))
   }
   def EnsimeFile(path: File): EnsimeFile = RawFile(path.toPath)
   def EnsimeFile(url: URL): EnsimeFile = EnsimeFile(URLDecoder.decode(url.toExternalForm(), "UTF-8"))
@@ -55,6 +55,24 @@ package object ensimefile {
   private def cleanBadWindows(file: String): String = file match {
     case BadWindowsRegex(clean) => clean
     case other => other
+  }
+
+  // Try to decode the given uri to avoid character conversions.
+  // Consider decoding errors as a file path with an incorrect 'file:' prefix.
+  private def getUriPath(prefix: String, uri: String): String = {
+    try {
+      new URI(s"$prefix$uri").getPath
+    } catch {
+      case e: URISyntaxException => uri
+    }
+  }
+
+  private def stringToPath(file: String, uriPart: Option[String]): Path = {
+    val decodedFile = uriPart match {
+      case Some(prefix) => getUriPath(prefix, file)
+      case None => file
+    }
+    Paths.get(cleanBadWindows(decodedFile))
   }
 
   implicit class RichRawFile(val raw: RawFile) extends RichEnsimeFile {
