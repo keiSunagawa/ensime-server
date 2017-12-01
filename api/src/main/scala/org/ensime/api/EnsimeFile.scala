@@ -1,4 +1,4 @@
-// Copyright: 2017 Sam Halliday
+// Copyright: 2010 - 2017 https://github.com/ensime/ensime-server/graphs/contributors
 // License: http://www.gnu.org/licenses/lgpl-3.0.en.html
 
 package org.ensime.api
@@ -10,6 +10,7 @@ import java.nio.file._
 
 import spray.json._
 import DeserializationException._
+import org.ensime.sexp._
 
 // it would be good to expand this hierarchy and include information
 // such as files/dirs, existance, content hints
@@ -25,6 +26,13 @@ sealed trait EnsimeFile {
 
 final case class RawFile(file: Path)                   extends EnsimeFile
 final case class ArchiveFile(jar: Path, entry: String) extends EnsimeFile
+
+object RawFile {
+  implicit val sexpWriter: SexpWriter[RawFile] =
+    SexpWriter[Path].contramap(_.file)
+  implicit val sexpReader: SexpReader[RawFile] =
+    SexpReader[Path].map(RawFile(_))
+}
 
 object EnsimeFile {
   def apply(path: String): EnsimeFile = path match {
@@ -59,4 +67,12 @@ object EnsimeFile {
     case JsString(uri) => EnsimeFile(uri)
     case got           => unexpectedJson[EnsimeFile](got)
   }
+  implicit val sexpWriter: SexpWriter[EnsimeFile] = {
+    case RawFile(path)  => SexpString(path.toString)
+    case a: ArchiveFile => SexpString(a.uriString)
+  }
+  implicit val sexpReader: SexpReader[EnsimeFile] = SexpReader.instance {
+    case SexpString(uri) => EnsimeFile(uri)
+  }
+
 }

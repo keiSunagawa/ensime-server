@@ -1,14 +1,16 @@
-// Copyright: 2010 - 2017 https://github.com/ensime/ensime-server/graphs
-// License: http://www.apache.org/licenses/LICENSE-2.0
+// Copyright: 2010 - 2017 https://github.com/ensime/ensime-server/graphs/contributors
+// License: http://www.gnu.org/licenses/lgpl-3.0.en.html
+
 package org.ensime.api
 
 import java.io.File
 
-import spray.json._
-
 import scalaz.deriving
 
-@deriving(JsReader, JsWriter)
+import spray.json.{ JsReader, JsWriter }
+import org.ensime.sexp.{ SexpReader, SexpWriter }
+
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class RpcRequestEnvelope(req: RpcRequest, callId: Int)
 
 /**
@@ -18,22 +20,22 @@ final case class RpcRequestEnvelope(req: RpcRequest, callId: Int)
  * NOTE: we intend to simplify these messages
  * https://github.com/ensime/ensime-server/issues/845
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 sealed trait RpcRequest
 
 // queries related to connection startup
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 sealed trait RpcStartupRequest extends RpcRequest
 
 /**
  * Responds with a `ConnectionInfo`.
  */
 @deprecating("Please switch to asynchronous connection handling.")
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 case object ConnectionInfoReq extends RpcStartupRequest
 
 // related to managing the state of the analyser
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 sealed trait RpcAnalyserRequest extends RpcRequest
 
 /**
@@ -45,7 +47,7 @@ sealed trait RpcAnalyserRequest extends RpcRequest
  * @param file source.
  * @param range in the file to inspect.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class ImplicitInfoReq(
   file: Either[File, SourceFileInfo],
   range: OffsetRange
@@ -59,14 +61,14 @@ final case class ImplicitInfoReq(
  * Responds with a `VoidResponse`.
  */
 @deprecating("prefer UnloadFilesReq")
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class RemoveFileReq(file: File) extends RpcAnalyserRequest
 
 /**
  * Responds with a `VoidResponse`.
  */
 @deprecating("redundant query, use TypecheckFilesReq")
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class TypecheckFileReq(fileInfo: SourceFileInfo)
     extends RpcAnalyserRequest
 
@@ -74,7 +76,7 @@ final case class TypecheckFileReq(fileInfo: SourceFileInfo)
  * Responds with a `VoidResponse`
  */
 @deprecating("prefer UnloadFilesReq")
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class UnloadFileReq(fileInfo: SourceFileInfo)
     extends RpcAnalyserRequest
 
@@ -85,7 +87,7 @@ final case class UnloadFileReq(fileInfo: SourceFileInfo)
  *
  * Responds with a `VoidResponse`
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class UnloadFilesReq(
   source: List[SourceFileInfo],
   remove: Boolean
@@ -95,7 +97,7 @@ final case class UnloadFilesReq(
  * Response with a `VoidResponse`.
  */
 @deprecating("replaced by RestartAnalyzerReq")
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class TypecheckModule(moduleId: EnsimeProjectId)
     extends RpcAnalyserRequest
 
@@ -103,26 +105,26 @@ final case class TypecheckModule(moduleId: EnsimeProjectId)
  * Responds with a `VoidResponse`.
  */
 @deprecating("replaced by RestartAnalyzerReq")
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 case object UnloadAllReq extends RpcAnalyserRequest
 
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 sealed trait ReloadStrategy
 object ReloadStrategy {
 
   /** a clean slate, client should reload all open files */
-  @deriving(JsReader, JsWriter)
+  @deriving(JsReader, JsWriter, SexpReader, SexpWriter)
   case object UnloadAll extends ReloadStrategy
 
   /**
    * compiles all project sources, e.g. project is not batch compiled.
    * Client should reload all third party files.
    */
-  @deriving(JsReader, JsWriter)
+  @deriving(JsReader, JsWriter, SexpReader, SexpWriter)
   case object LoadProject extends ReloadStrategy
 
   /** reload all the files that were previously loaded */
-  @deriving(JsReader, JsWriter)
+  @deriving(JsReader, JsWriter, SexpReader, SexpWriter)
   case object KeepLoaded extends ReloadStrategy
 }
 
@@ -132,7 +134,7 @@ object ReloadStrategy {
  *
  * No RPC response, there will be CompilerRestartedEvent
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class RestartScalaCompilerReq(
   id: Option[EnsimeProjectId],
   strategy: ReloadStrategy
@@ -142,18 +144,18 @@ final case class RestartScalaCompilerReq(
  * Responds with a `VoidResponse`.
  */
 @deprecating("should only support SourceFileInfo")
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class TypecheckFilesReq(files: List[Either[File, SourceFileInfo]])
     extends RpcAnalyserRequest
 
 // related to searching the indexer
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 sealed trait RpcSearchRequest extends RpcRequest
 
 /**
  * Responds with `SymbolSearchResults`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class PublicSymbolSearchReq(
   keywords: List[String],
   maxResults: Int
@@ -162,7 +164,7 @@ final case class PublicSymbolSearchReq(
 /**
  * Responds with [ImportSuggestions].
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class ImportSuggestionsReq(
   file: Either[File, SourceFileInfo],
   point: Int,
@@ -173,21 +175,21 @@ final case class ImportSuggestionsReq(
 /**
  * Responds with `FullyQualifiedName`
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class FqnOfSymbolAtPointReq(file: SourceFileInfo, point: Int)
     extends RpcAnalyserRequest
 
 /**
  * Responds with `FullyQualifiedName`
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class FqnOfTypeAtPointReq(file: SourceFileInfo, point: Int)
     extends RpcAnalyserRequest
 
 /**
  * Responds with `SourcePositions`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class UsesOfSymbolAtPointReq(
   file: SourceFileInfo,
   point: Int
@@ -196,7 +198,7 @@ final case class UsesOfSymbolAtPointReq(
 /**
  * Responds with `HierarchyInfo`
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class HierarchyOfTypeAtPointReq(
   file: SourceFileInfo,
   point: Int
@@ -205,20 +207,20 @@ final case class HierarchyOfTypeAtPointReq(
 /**
  * Responds with `SourcePositions`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class FindUsages(fqn: String) extends RpcSearchRequest
 
 /**
  * Responds with `HierarchyInfo`
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class FindHierarchy(fqn: String) extends RpcSearchRequest
 
 /**
  * Responds with a `StringResponse` for the URL of the documentation if valid,
  * or `FalseResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class DocUriAtPointReq(
   file: Either[File, SourceFileInfo],
   point: OffsetRange
@@ -227,7 +229,7 @@ final case class DocUriAtPointReq(
 /**
  * Responds with a `CompletionInfoList`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class CompletionsReq(
   fileInfo: SourceFileInfo,
   point: Int,
@@ -239,7 +241,7 @@ final case class CompletionsReq(
 /**
  * Responds with `TypeInfo` if valid, or `FalseResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class TypeAtPointReq(
   file: Either[File, SourceFileInfo],
   range: OffsetRange
@@ -248,7 +250,7 @@ final case class TypeAtPointReq(
 /**
  * Responds with a `SymbolInfo` if valid, or `FalseResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class SymbolAtPointReq(file: Either[File, SourceFileInfo],
                                   point: Int)
     extends RpcAnalyserRequest
@@ -256,7 +258,7 @@ final case class SymbolAtPointReq(file: Either[File, SourceFileInfo],
 /**
  * Responds with a `RefactorFailure` or a `RefactorDiffEffect`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class RefactorReq(
   procId: Int,
   params: RefactorDesc,
@@ -274,7 +276,7 @@ final case class RefactorReq(
  * @param end of character offset of the input range.
  * @param requestedTypes semantic classes in which we are interested.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class SymbolDesignationsReq(
   file: Either[File, SourceFileInfo],
   start: Int,
@@ -285,70 +287,70 @@ final case class SymbolDesignationsReq(
 /**
  * Responds with a `FileRange`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class ExpandSelectionReq(file: File, start: Int, end: Int)
     extends RpcAnalyserRequest
 
 /**
  * Responds with a `StructureView`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class StructureViewReq(fileInfo: SourceFileInfo)
     extends RpcAnalyserRequest
 
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 sealed trait RpcDebuggerRequest extends RpcRequest
 
 /**
  * Query whether we are in an active debug session
  * Responds with a `TrueResponse` or a `FalseResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case object DebugActiveVmReq extends RpcDebuggerRequest
 
 /**
  * Responds with `DebugVmStatus`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class DebugAttachReq(hostname: String, port: String)
     extends RpcDebuggerRequest
 
 /**
  * Responds with a `FalseResponse` or a `TrueResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 case object DebugStopReq extends RpcDebuggerRequest
 
 /**
  * Responds with a `VoidResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class DebugSetBreakReq(file: EnsimeFile, line: Int)
     extends RpcDebuggerRequest
 
 /**
  * Responds with a `VoidResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class DebugClearBreakReq(file: EnsimeFile, line: Int)
     extends RpcDebuggerRequest
 
 /**
  * Responds with a `VoidResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 case object DebugClearAllBreaksReq extends RpcDebuggerRequest
 
 /**
  * Responds with a `BreakpointList`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 case object DebugListBreakpointsReq extends RpcDebuggerRequest
 
 /**
  * Responds with a `FalseResponse` or a `TrueResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 case object DebugRunReq extends RpcDebuggerRequest
 
 /**
@@ -356,48 +358,48 @@ case object DebugRunReq extends RpcDebuggerRequest
  * Responds with a `FalseResponse` or a `TrueResponse`.
  * @param threadId the target debugged VM thread
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class DebugContinueReq(threadId: DebugThreadId)
     extends RpcDebuggerRequest
 
 /**
  * Responds with a `FalseResponse` or a `TrueResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class DebugStepReq(threadId: DebugThreadId)
     extends RpcDebuggerRequest
 
 /**
  * Responds with a `FalseResponse` or a `TrueResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class DebugNextReq(threadId: DebugThreadId)
     extends RpcDebuggerRequest
 
 /**
  * Responds with a `FalseResponse` or a `TrueResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class DebugStepOutReq(threadId: DebugThreadId)
     extends RpcDebuggerRequest
 
 /**
  * Responds with a `DebugLocation` if successful, or `FalseResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class DebugLocateNameReq(threadId: DebugThreadId, name: String)
     extends RpcDebuggerRequest
 
 /**
  * Responds with a `DebugValue` if successful, or `FalseResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class DebugValueReq(loc: DebugLocation) extends RpcDebuggerRequest
 
 /**
  * Responds with a `StringResponse` if successful, or `FalseResponse`.
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class DebugToStringReq(threadId: DebugThreadId, loc: DebugLocation)
     extends RpcDebuggerRequest
 
@@ -407,7 +409,7 @@ final case class DebugToStringReq(threadId: DebugThreadId, loc: DebugLocation)
  * @param loc The variable to update.
  * @param newValue The value to set, encoded as a String
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class DebugSetValueReq(loc: DebugLocation, newValue: String)
     extends RpcDebuggerRequest
 
@@ -417,7 +419,7 @@ final case class DebugSetValueReq(loc: DebugLocation, newValue: String)
  * @param index The index of the first frame where 0 is the lowest frame
  * @param count The number of frames to return
  */
-@deriving(JsReader, JsWriter)
+@deriving(JsReader, JsWriter, SexpReader, SexpWriter)
 final case class DebugBacktraceReq(threadId: DebugThreadId,
                                    index: Int,
                                    count: Int)

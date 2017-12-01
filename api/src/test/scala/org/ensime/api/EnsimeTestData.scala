@@ -1,10 +1,11 @@
-// Copyright: 2010 - 2017 https://github.com/ensime/ensime-server/graphs
-// License: http://www.apache.org/licenses/LICENSE-2.0
+// Copyright: 2010 - 2017 https://github.com/ensime/ensime-server/graphs/contributors
+// License: http://www.gnu.org/licenses/lgpl-3.0.en.html
+
 package org.ensime.api
 
 import java.io.File
 
-trait EnsimeTestData {
+object EnsimeTestData {
   // duplicating utils to minimise dependencies
   private def canon(s: String): RawFile = {
     val file = new File(s)
@@ -102,11 +103,11 @@ trait EnsimeTestData {
     List(methodSearchRes, typeSearchRes)
   )
 
-  val completionInfoCList = CompletionInfoList("fooBar", List(completionInfo))
-
   val fileRange = FileRange("/abc", 7, 9)
 
-  val debugLocObjectRef: DebugLocation = DebugObjectReference(57L)
+  val debugLocObjectRef: DebugLocation = DebugObjectReference(
+    DebugObjectId(57L)
+  )
 
   val debugNullValue = DebugNullValue("typeNameStr")
 
