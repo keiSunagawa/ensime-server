@@ -1,12 +1,12 @@
 install:
   - ps: |
       Add-Type -AssemblyName System.IO.Compression.FileSystem
-      if (!(Test-Path -Path "C:\sbt\lib\local-preloaded\org.scala-sbt\sbt\0.13.15\jars\sbt.jar" )) {
+      if (!(Test-Path -Path "C:\sbt\bin\sbt.bat" )) {
         (new-object System.Net.WebClient).DownloadFile(
-          'https://dl.bintray.com/sbt/native-packages/sbt/0.13.15/sbt-0.13.15.zip',
-          'C:\sbt-0.13.15.zip'
+          'https://github.com/sbt/sbt/releases/download/v1.0.4/sbt-1.0.4.zip',
+          'C:\sbt-1.0.4.zip'
         )
-        [System.IO.Compression.ZipFile]::ExtractToDirectory("C:\sbt-0.13.15.zip", "C:\")
+        [System.IO.Compression.ZipFile]::ExtractToDirectory("C:\sbt-1.0.4.zip", "C:\")
       }
   - ps: |
       if (!(Test-Path -Path "C:\Program Files\Java\jdk1.8.0\src.zip")) {
@@ -27,8 +27,7 @@ install:
 build_script:
   - echo ensimeServerJars := Nil > ensime.sbt
   - echo ensimeServerProjectJars := Nil >> ensime.sbt
-  - sbt ++%SCALA_VERSION%! ";ensimeConfig ;test:compile ;it:compile ;ensime/assembly"
-  - IF DEFINED APPVEYOR_PULL_REQUEST_NUMBER (cd testing\cache && sbt ++%SCALA_VERSION%! ensimeConfig ensimeServerIndex && cd ..\..)
+  - sbt ++%SCALA_VERSION%! ";prep ;cpl"
 test_script:
   - IF DEFINED APPVEYOR_PULL_REQUEST_NUMBER (sbt ++%SCALA_VERSION%! "testOnly -- -l tags.IgnoreOnAppVeyor")
   - SET SBT_TASK_LIMIT=2
