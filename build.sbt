@@ -24,6 +24,7 @@ lazy val `s-express` = project
   )
 
 lazy val monkeys = project
+  .disablePlugins(ScalafixPlugin)
   .settings(
     libraryDependencies ++= Seq(
       "org.apache.commons" % "commons-vfs2" % "2.1"

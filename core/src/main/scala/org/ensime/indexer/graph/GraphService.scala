@@ -13,7 +13,6 @@ import scala.util.Try
 import akka.event.slf4j.SLF4JLogging
 import com.orientechnologies.orient.core.Orient
 import com.orientechnologies.orient.core.config.OGlobalConfiguration
-import com.orientechnologies.orient.core.db.ODatabaseRecordThreadLocal
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.tinkerpop.blueprints.Vertex
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory
@@ -25,12 +24,12 @@ import org.ensime.indexer.SearchService._
 import org.ensime.indexer.orientdb.api._
 import org.ensime.indexer.orientdb.schema.api._
 import org.ensime.indexer.orientdb.syntax._
-import org.ensime.util.ensimefile._
 import org.ensime.util.file._
 import org.ensime.util.fileobject._
 import org.ensime.util.stringymap.api.BigDataFormat
 import org.ensime.vfs._
 import shapeless.cachedImplicit
+import scala.concurrent.ExecutionContextExecutor
 
 // I'm not particularly keen on this kind of OOP modelling...
 sealed trait FqnSymbol {
@@ -159,7 +158,8 @@ class GraphService(dir: File) extends SLF4JLogging {
       }
     }
   )
-  private implicit val ec = ExecutionContext.fromExecutor(executor)
+  private implicit val ec: ExecutionContextExecutor =
+    ExecutionContext.fromExecutor(executor)
 
   private implicit lazy val db: OrientGraphFactory = {
     // http://orientdb.com/docs/2.1/Performance-Tuning.html

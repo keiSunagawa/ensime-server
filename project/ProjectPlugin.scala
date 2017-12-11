@@ -7,6 +7,7 @@ import sbt.{ IntegrationTest => It, _ }
 import sbtassembly.AssemblyKeys._
 import sbtassembly.{ AssemblyKeys, MergeStrategy, PathList }
 import sbtbuildinfo.BuildInfoPlugin, BuildInfoPlugin.autoImport._
+import scalafix.sbt.ScalafixPlugin, ScalafixPlugin.autoImport._
 
 import org.ensime.EnsimePlugin.JdkDir
 import org.ensime.EnsimeKeys._
@@ -22,11 +23,13 @@ object ProjectPlugin extends AutoPlugin {
   import autoImport._
 
   override def projectSettings = Seq(
+    scalafixEnabled := !sys.env.contains("CI"),
     transitiveClassifiers := {
       // reduces the download burden when running in CI
       val orig = transitiveClassifiers.value
       if (sys.env.contains("CI")) Nil else orig
     },
+    scalacOptions ++= extraScalacOptions(scalaVersion.value),
     // WORKAROUND https://issues.scala-lang.org/browse/SI-10157
     scalacOptions in (Compile, doc) -= "-Xfatal-warnings",
     scalacOptions in Compile -= "-Ywarn-value-discard",
@@ -42,9 +45,7 @@ object ProjectPlugin extends AutoPlugin {
         s"-Xmacro-settings:deriving.defaults=$dir/deriving-defaults.conf"
       )
     },
-    addCompilerPlugin(
-      "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
-    ),
+    MacroParadise,
     libraryDependencies ++= Seq(
       "com.github.mpilquist" %% "simulacrum"     % "0.11.0",
       "com.fommil"           %% "deriving-macro" % "0.9.0",
@@ -91,4 +92,18 @@ object ProjectPluginKeys {
   val nettyVersion  = "4.1.17.Final"
   val akkaVersion   = "2.5.7"
   val orientVersion = "2.2.30"
+
+  def MacroParadise =
+    addCompilerPlugin(
+      "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
+    )
+  def KindProjector =
+    addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.4")
+
+  def extraScalacOptions(scalaVersion: String) =
+    CrossVersion.partialVersion(scalaVersion) match {
+      case Some((2, 12)) => Seq("-Ywarn-unused:imports")
+      //Seq("-Ywarn-unused:patvars,imports,privates,locals")
+      case _ => Nil
+    }
 }
