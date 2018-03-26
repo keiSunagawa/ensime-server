@@ -13,7 +13,6 @@ import scala.util.Try
 import akka.event.slf4j.SLF4JLogging
 import com.orientechnologies.orient.core.Orient
 import com.orientechnologies.orient.core.config.OGlobalConfiguration
-import com.orientechnologies.orient.core.db.ODatabaseRecordThreadLocal
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.tinkerpop.blueprints.Vertex
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory
@@ -167,11 +166,6 @@ class GraphService(dir: File) extends SLF4JLogging {
     OGlobalConfiguration.USE_WAL.setValue(true)
     OGlobalConfiguration.DISK_CACHE_SIZE.setValue(64) // 64MB is far more sensible than 4GB
 
-    //This is a hack, that resolves some classloading issues in OrientDB.
-    //https://github.com/orientechnologies/orientdb/issues/5146
-    if (ODatabaseRecordThreadLocal.INSTANCE == null) {
-      sys.error("Calling this manually prevents an initialization issue.")
-    }
     Orient.setRegisterDatabaseByPath(true)
 
     val url = "plocal:" + dir.getAbsolutePath
