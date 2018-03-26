@@ -20,7 +20,7 @@ object ProjectPlugin extends AutoPlugin {
   override def trigger = allRequirements
 
   override def buildSettings = Seq(
-    scalaVersion := "2.12.3",
+    scalaVersion := "2.12.5",
     organization := "org.ensime",
 
     // so M2 releases don't impact SNAPSHOT versioning
@@ -46,9 +46,10 @@ object ProjectPlugin extends AutoPlugin {
       if (scalaVersion.value.startsWith("2.10"))
         orig.filterNot(_.startsWith("-Ywarn-numeric-widen")) // false positives
       else
-        orig
+        orig.filterNot(_.startsWith("-Ywarn-unused"))
     },
 
+    scalacOptions -= "-Xfatal-warnings", // akka 2.10 compat is impossible with deprecations
     scalacOptions -= "-Ywarn-value-discard",
     scalacOptions ++= Seq("-language:postfixOps", "-language:implicitConversions"),
     scalafmtOnCompile := true
@@ -141,7 +142,7 @@ object EnsimeBuild {
   lazy val s_express = Project("s-express", file("s-express")) settings (commonSettings) settings (
       licenses := Seq(LGPL3),
       libraryDependencies ++= Seq(
-        "com.lihaoyi" %% "fastparse" % "0.4.3",
+        "com.lihaoyi" %% "fastparse" % "1.0.0",
         "org.scalacheck" %% "scalacheck" % "1.13.5" % Test
       ) ++ shapeless.value ++ logback
     )
@@ -198,8 +199,8 @@ object EnsimeBuild {
           exclude ("commons-logging", "commons-logging"),
         "org.apache.lucene" % "lucene-core" % luceneVersion,
         "org.apache.lucene" % "lucene-analyzers-common" % luceneVersion,
-        "org.ow2.asm" % "asm-commons" % "5.2",
-        "org.ow2.asm" % "asm-util" % "5.2",
+        "org.ow2.asm" % "asm-commons" % "6.1.1",
+        "org.ow2.asm" % "asm-util" % "6.1.1",
         "org.scala-lang" % "scalap" % scalaVersion.value,
         "com.typesafe.akka" %% "akka-actor" % akkaVersion.value,
         "com.typesafe.akka" %% "akka-slf4j" % akkaVersion.value,
@@ -228,7 +229,7 @@ object EnsimeBuild {
   }
 
   val luceneVersion = "6.4.2" // 6.6 deprecates index time boosting
-  val nettyVersion = "4.1.13.Final"
+  val nettyVersion = "4.1.22.Final"
   lazy val server = Project("server", file("server")).dependsOn(
     core, swanky, jerky,
     s_express % "test->test",
@@ -278,12 +279,12 @@ object EnsimeBuild {
 
   private def akkaVersion: Def.Initialize[String] = Def.setting {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, minor)) if minor >= 11 => "2.5.3"
+      case Some((2, minor)) if minor >= 11 => "2.5.11"
       case Some((2, 10)) => "2.3.16"
     }
   }
 
-  private val orientVersion = "2.2.24"
+  private val orientVersion = "2.2.33"
 }
 
 // projects used in the integration tests, not published

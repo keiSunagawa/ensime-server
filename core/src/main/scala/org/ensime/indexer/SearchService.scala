@@ -1,4 +1,4 @@
-// Copyright: 2010 - 2017 https://github.com/ensime/ensime-server/graphs
+// Copyright: 2010 - 2018 https://github.com/ensime/ensime-server/graphs
 // License: http://www.gnu.org/licenses/gpl-3.0.en.html
 package org.ensime.indexer
 
@@ -53,6 +53,9 @@ class SearchService(
   /**
    * Changelog:
    *
+   * 2.0.5 - bumping orientdb and I'm pretty sure they'll have broken the
+   *         schema.
+   *
    * 2.0.4 - find usages and show implementations using Indexer
    *
    * 2.0.3g - graphpocalypse
@@ -81,7 +84,7 @@ class SearchService(
    *
    * 1.0 - initial schema
    */
-  private val version = "2.0.4"
+  private val version = "2.0.5"
 
   private[indexer] val index = new IndexService(
     config.cacheDir.file / ("index-" + version)
