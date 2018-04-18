@@ -14,8 +14,8 @@ before_install:
 stages:
   - name: test
   - name: integration
-  - name: publish
-    if: branch = master
+#  - name: publish
+#    if: branch = 3.0
 matrix:
   include:
     - env: TASK=GIT
@@ -27,11 +27,11 @@ matrix:
 
     - env: TASK=FORMAT
       script:
-      - sbt scalafmtSbtCheck compile:scalafmtCheck test:scalafmtCheck it:scalafmtCheck
+      - sbt ++$SCALA_VERSION! check
 
     - env: TASK=LINT
       script:
-      - sbt "compile:scalafixCli --test" "test:scalafixCli --test"
+      - sbt ++$SCALA_VERSION! lint
 
     - env: TASK=TEST
       script:
@@ -50,7 +50,7 @@ matrix:
       script:
       - echo "ensimeServerJars := Nil" > ensime.sbt ;
       - echo "ensimeServerProjectJars := Nil" >> ensime.sbt ;
-      - sbt ++$SCALA_VERSION! ";prep ;cpl"
+      - sbt ++$SCALA_VERSION! ";cpl ;prep"
       - SBT_TASK_LIMIT=2 sbt ++$SCALA_VERSION! "it:testOnly -- -l tags.IgnoreOnTravis"
       - rm -rf $HOME/.coursier/cache/v1/https/oss.sonatype.org
 
@@ -62,14 +62,14 @@ matrix:
       script:
         - echo "ensimeServerJars := Nil" > ensime.sbt ;
         - echo "ensimeServerProjectJars := Nil" >> ensime.sbt ;
-        - sbt ++$SCALA_VERSION! ";prep ;cpl"
+        - sbt ++$SCALA_VERSION! ";cpl ;prep"
         - SBT_TASK_LIMIT=2 sbt ++$SCALA_VERSION! "it:testOnly -- -l tags.IgnoreOnTravis"
         - rm -rf $HOME/.coursier/cache/v1/https/oss.sonatype.org
 
-    - env: TASK=PUBLISH
-      stage: publish
-      script:
-        - sbt publish
+#    - env: TASK=PUBLISH
+#      stage: publish
+#      script:
+#        - sbt ++$SCALA_VERSION! publish
 cache:
   directories:
   - $HOME/.sbt
