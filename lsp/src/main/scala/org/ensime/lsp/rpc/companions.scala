@@ -121,6 +121,8 @@ trait NotificationCompanion[A] {
       case None => Left(UnknownMethod)
       case Some(command) =>
         jsonRpcNotificationMessage.params match {
+          case None if command.method == "exit" =>
+            readObj(command, JsObject.empty)
           case None                    => Left(NoParams)
           case Some(ArrayParams(_))    => Left(NoNamedParams)
           case Some(ObjectParams(obj)) => readObj(command, obj)

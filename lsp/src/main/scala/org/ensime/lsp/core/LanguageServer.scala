@@ -49,7 +49,7 @@ object LanguageServer {
           .write(DocumentSymbolResult(l.documentSymbols(tdi)), id)
       case ("shutdown", Shutdown(), id) =>
         l.shutdown()
-        JsonRpcResponseSuccessMessage(spray.json.JsNull, id)
+        RpcResponse.write(ShutdownResult(), id)
     }
   }
 }
@@ -74,7 +74,8 @@ abstract class LanguageServer(inStream: InputStream, outStream: OutputStream)
       onCloseTextDocument(td)
     case DidChangeWatchedFiles(changes) =>
       onChangeWatchedFiles(changes)
-    case e => log.error(s"Unknown notification $e")
+    case Exit() => onExit()
+    case e      => log.error(s"Unknown notification $e")
   }
 
   val connection: Connection = new Connection(
@@ -113,6 +114,12 @@ abstract class LanguageServer(inStream: InputStream, outStream: OutputStream)
                         position: Position): CompletionList
 
   def shutdown(): Unit
+
+  def onExit(): Unit = {
+    log.debug("Exiting...")
+    // NOTE: should exit with success code 0 if the shutdown request has been received before; otherwise with error code 1
+    sys.exit(0)
+  }
 
   def gotoDefinitionRequest(textDocument: TextDocumentIdentifier,
                             position: Position): DefinitionResult
