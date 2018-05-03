@@ -133,7 +133,8 @@ final case class InitializeResult(capabilities: ServerCapabilities)
 @deriving(JsReader, JsWriter)
 final case class Shutdown() extends ServerCommand
 
-final case class ShutdownResult(dummy: Int) extends ResultResponse
+@deriving(JsWriter)
+final case class ShutdownResult() extends ResultResponse
 
 @deriving(JsReader, JsWriter)
 final case class ShowMessageRequestParams(
@@ -209,7 +210,9 @@ final case class PublishDiagnostics(uri: String, diagnostics: Seq[Diagnostic])
 
 // from client to server
 
-final case class ExitNotification() extends Notification
+@deriving(JsReader, JsWriter)
+final case class Exit() extends Notification
+
 @deriving(JsReader, JsWriter)
 final case class DidOpenTextDocumentParams(textDocument: TextDocumentItem)
     extends Notification

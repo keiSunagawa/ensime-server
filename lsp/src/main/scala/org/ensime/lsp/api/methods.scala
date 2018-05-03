@@ -70,6 +70,8 @@ object Notifications {
     RpcNotification[Initialized]("initialized")
   implicit val cancelRequestNotification: RpcNotification[CancelRequest] =
     RpcNotification[CancelRequest]("$/cancelRequest")
+  implicit val exitNotification: RpcNotification[Exit] =
+    RpcNotification[Exit]("exit")
 }
 
 object Notification extends NotificationCompanion[Notification] {
@@ -86,6 +88,7 @@ object Notification extends NotificationCompanion[Notification] {
     didSaveNotification,
     didChangeWatchedFilesNotification,
     initializedNotification,
-    cancelRequestNotification
+    cancelRequestNotification,
+    exitNotification
   )
 }
