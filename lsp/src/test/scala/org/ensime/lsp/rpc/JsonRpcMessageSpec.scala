@@ -9,7 +9,6 @@ import org.scalatest.Matchers._
 import spray.json._
 
 import scala.collection.immutable.Seq
-import scala.reflect.ClassTag
 
 class JsonRpcMessageSpec extends FreeSpec {
 
@@ -19,18 +18,18 @@ class JsonRpcMessageSpec extends FreeSpec {
     def parseJson: JsValue = JsParser(s)
   }
 
-  def willFailToDecode[T: JsReader: JsWriter, E <: RuntimeException: ClassTag](
+  def willFailToDecode[T: JsReader: JsWriter](
     json: JsValue
   )(implicit p: Position): Unit =
-    s"will fail to decode with ${implicitly[ClassTag[E]].toString} exception" in {
-      a[E] should be thrownBy json.as[T]
+    s"will fail to decode" in {
+      json.as[T] should be('left)
     }
 
   def willDecodeAndEncode[T: JsReader: JsWriter](message: T, json: JsValue)(
     implicit p: Position
   ): Unit = {
     s"will decode to $message" in {
-      json.as[T] shouldEqual message
+      json.as[T] shouldEqual Right(message)
     }
     s"will encode to $json" in {
       message.toJson shouldEqual json
@@ -39,7 +38,7 @@ class JsonRpcMessageSpec extends FreeSpec {
 
   "An invalid JsValue" - {
     val json = "{}".parseJson
-    willFailToDecode[JsonRpcMessage, DeserializationException](json)
+    willFailToDecode[JsonRpcMessage](json)
   }
 
   "A JsonRpcRequestMessage" - {
@@ -53,7 +52,7 @@ class JsonRpcMessageSpec extends FreeSpec {
           |  "id":0
           |}""".stripMargin.parseJson
 
-      willFailToDecode[JsonRpcRequestMessage, IllegalArgumentException](json)
+      willFailToDecode[JsonRpcRequestMessage](json)
     }
     "with version of the wrong type" - {
       val json = """
@@ -63,7 +62,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |  "params":{"param1":"param1","param2":"param2"},
                    |  "id":0
                    |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcRequestMessage, DeserializationException](json)
+      willFailToDecode[JsonRpcRequestMessage](json)
     }
     "without a version" - {
       val json = """
@@ -72,7 +71,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |  "params":{"param1":"param1","param2":"param2"},
                    |  "id":0
                    |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcRequestMessage, DeserializationException](json)
+      willFailToDecode[JsonRpcRequestMessage](json)
     }
     "with method of the wrong type" - {
       val json =
@@ -83,7 +82,7 @@ class JsonRpcMessageSpec extends FreeSpec {
           |  "params":{"param1":"param1","param2":"param2"},
           |  "id":0
           |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcRequestMessage, DeserializationException](json)
+      willFailToDecode[JsonRpcRequestMessage](json)
     }
     "without a method" - {
       val json =
@@ -93,7 +92,7 @@ class JsonRpcMessageSpec extends FreeSpec {
           |  "params":{"param1":"param1","param2":"param2"},
           |  "id":0
           |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcRequestMessage, DeserializationException](json)
+      willFailToDecode[JsonRpcRequestMessage](json)
     }
     "with params of the wrong type" - {
       val json = """
@@ -103,7 +102,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |  "params":"params",
                    |  "id":0
                    |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcRequestMessage, DeserializationException](json)
+      willFailToDecode[JsonRpcRequestMessage](json)
     }
     "without params" - {
       val jsonRpcRequestMessage = JsonRpcRequestMessage(
@@ -257,9 +256,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |[
                    |]""".stripMargin.parseJson
 
-      willFailToDecode[JsonRpcRequestMessageBatch, IllegalArgumentException](
-        json
-      )
+      willFailToDecode[JsonRpcRequestMessageBatch](json)
     }
     "with an invalid request" - {
       val json = """
@@ -270,9 +267,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |    "id":1
                    |  }
                    |]""".stripMargin.parseJson
-      willFailToDecode[JsonRpcRequestMessageBatch, DeserializationException](
-        json
-      )
+      willFailToDecode[JsonRpcRequestMessageBatch](json)
     }
     "with a single request" - {
       val jsonRpcRequestMessageBatch = JsonRpcRequestMessageBatch(
@@ -308,9 +303,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |    "jsonrpc":"2.0"
                    |  }
                    |]""".stripMargin.parseJson
-      willFailToDecode[JsonRpcRequestMessageBatch, DeserializationException](
-        json
-      )
+      willFailToDecode[JsonRpcRequestMessageBatch](json)
     }
     "with a single notification" - {
       val jsonRpcRequestMessageBatch = JsonRpcRequestMessageBatch(
@@ -348,7 +341,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |  "result":{"param1":"param1","param2":"param2"},
                    |  "id":0
                    |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcResponseMessage, IllegalArgumentException](json)
+      willFailToDecode[JsonRpcResponseMessage](json)
     }
     "with version of the wrong type" - {
       val json = """
@@ -357,7 +350,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |  "result":{"param1":"param1","param2":"param2"},
                    |  "id":0
                    |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcResponseMessage, DeserializationException](json)
+      willFailToDecode[JsonRpcResponseMessage](json)
     }
     "without a version" - {
       val json = """
@@ -365,7 +358,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |  "result":{"param1":"param1","param2":"param2"},
                    |  "id":0
                    |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcResponseMessage, DeserializationException](json)
+      willFailToDecode[JsonRpcResponseMessage](json)
     }
     "with an error of the wrong type" - {
       val json = """
@@ -374,7 +367,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |  "error":"error",
                    |  "id":0
                    |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcResponseMessage, DeserializationException](json)
+      willFailToDecode[JsonRpcResponseMessage](json)
     }
     "with a parse error" - {
       val jsonRpcResponseMessage = JsonRpcResponseErrorMessages.parseError(
@@ -392,7 +385,7 @@ class JsonRpcMessageSpec extends FreeSpec {
     }
     "with an invalid request error" - {
       val jsonRpcResponseMessage = JsonRpcResponseErrorMessages.invalidRequest(
-        new Throwable("Boom"),
+        DeserializationException("Boom"),
         CorrelationId(1)
       )
       val jsonRpcResponseMessageJson =
@@ -540,9 +533,7 @@ class JsonRpcMessageSpec extends FreeSpec {
       val json = """
                    |[
                    |]""".stripMargin.parseJson
-      willFailToDecode[JsonRpcResponseMessageBatch, IllegalArgumentException](
-        json
-      )
+      willFailToDecode[JsonRpcResponseMessageBatch](json)
     }
     "with a single response" - {
       val jsonRpcResponseMessageBatch = JsonRpcResponseMessageBatch(
@@ -578,9 +569,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |  "method":"testMethod",
                    |  "params":{"param1":"param1","param2":"param2"}
                    |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcNotificationMessage, IllegalArgumentException](
-        json
-      )
+      willFailToDecode[JsonRpcNotificationMessage](json)
     }
     "with version of the wrong type" - {
       val json = """
@@ -589,9 +578,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |  "method":"testMethod",
                    |  "params":{"param1":"param1","param2":"param2"}
                    |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcNotificationMessage, DeserializationException](
-        json
-      )
+      willFailToDecode[JsonRpcNotificationMessage](json)
     }
     "without a version" - {
       val json = """
@@ -599,9 +586,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |  "method":"testMethod",
                    |  "params":{"param1":"param1","param2":"param2"}
                    |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcNotificationMessage, DeserializationException](
-        json
-      )
+      willFailToDecode[JsonRpcNotificationMessage](json)
     }
     "with method of the wrong type" - {
       val json = """
@@ -610,9 +595,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |  "method":3.0,
                    |  "params":{"param1":"param1","param2":"param2"}
                    |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcNotificationMessage, DeserializationException](
-        json
-      )
+      willFailToDecode[JsonRpcNotificationMessage](json)
     }
     "without a method" - {
       val json = """
@@ -620,9 +603,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |  "jsonrpc":"2.0",
                    |  "params":{"param1":"param1","param2":"param2"}
                    |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcNotificationMessage, DeserializationException](
-        json
-      )
+      willFailToDecode[JsonRpcNotificationMessage](json)
     }
     "with params of the wrong type" - {
       val json = """
@@ -631,9 +612,7 @@ class JsonRpcMessageSpec extends FreeSpec {
                    |  "method":"testMethod",
                    |  "params":"params"
                    |}""".stripMargin.parseJson
-      willFailToDecode[JsonRpcNotificationMessage, DeserializationException](
-        json
-      )
+      willFailToDecode[JsonRpcNotificationMessage](json)
     }
     "without params" - {
       val jsonRpcNotificationMessage = JsonRpcNotificationMessage(
