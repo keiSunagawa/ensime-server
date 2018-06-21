@@ -13,8 +13,9 @@ import org.ensime.io.Canon.ops._
 
 import org.ensime.api._
 import SexpReader.ops._
+import scalaz.ioeffect.RTS
 
-object EnsimeConfigProtocol {
+object EnsimeConfigProtocol extends RTS {
   private def log = Logger(this.getClass.getName)
 
   def parse(config: String): Either[DeserializationException, EnsimeConfig] =
@@ -52,6 +53,6 @@ object EnsimeConfigProtocol {
         dir.file.mkdirs()
       }
     }
-    p.canon.unsafePerformIO()
+    unsafePerformIO(p.canon)
   }
 }
