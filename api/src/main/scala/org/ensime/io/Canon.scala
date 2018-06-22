@@ -26,7 +26,9 @@ import Scalaz._
 object Canon extends LowPriorityCanon {
 
   implicit val file: Canon[File] =
-    f => IO.syncThrowable(f.getCanonicalFile).catchAll(_ => IO.syncThrowable(f.getAbsoluteFile))
+    f =>
+      IO.syncThrowable(f.getCanonicalFile)
+        .catchAll(_ => IO.syncThrowable(f.getAbsoluteFile))
 
   implicit val path: Canon[Path] =
     p =>
