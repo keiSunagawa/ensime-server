@@ -161,6 +161,7 @@ publish := {}
 test in assembly := {}
 aggregate in assembly := false
 assemblyMergeStrategy in assembly := {
+  case PathList(xs @ _*) if xs.last == "module-info.class" => MergeStrategy.discard
   case PathList("META-INF", "semanticdb.semanticidx") => MergeStrategy.discard
   case PathList("META-INF", "semanticdb", _*)         => MergeStrategy.discard
   case PathList("org", "apache", "commons", "vfs2", xs @ _*) =>
