@@ -30,7 +30,7 @@ class TCPServer(
   var activeConnections = 0
 
   IO(Tcp) ! Bind(self,
-                 new InetSocketAddress("127.0.0.1", preferredPort.getOrElse(0)))
+                 new InetSocketAddress("0.0.0.0", preferredPort.getOrElse(0)))
 
   def receive = {
     case b @ Bound(localAddress) =>
